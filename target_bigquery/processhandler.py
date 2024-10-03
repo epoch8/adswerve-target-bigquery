@@ -395,7 +395,7 @@ class LoadJobProcessHandler(BaseProcessHandler):
         # run load job or raise error
         try:
             load_job = client.load_table_from_file(
-                rows, dataset.table(table_name), job_config=load_config, rewind=True
+                rows, dataset.table(table_name), job_config=load_config, rewind=True, timeout=600
             )
             logger.info("loading job {}".format(load_job.job_id))
             job = load_job.result()
