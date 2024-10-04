@@ -2,6 +2,7 @@ import json
 import uuid
 from datetime import datetime
 from tempfile import TemporaryFile
+import time
 
 import singer
 from google.api_core import exceptions as google_exceptions
@@ -393,27 +394,39 @@ class LoadJobProcessHandler(BaseProcessHandler):
 
         load_job = None
         # run load job or raise error
-        try:
-            load_job = client.load_table_from_file(
-                rows, dataset.table(table_name), job_config=load_config, rewind=True, timeout=600
-            )
-            logger.info("loading job {}".format(load_job.job_id))
-            job = load_job.result()
-            logger.info(job._properties)
+        attempts = 5
 
-            return job
+        while attempts > 0:
+            attempts = attempts - 1
+            try:
+                load_job = client.load_table_from_file(
+                    rows, dataset.table(table_name), job_config=load_config, rewind=True, timeout=600
+                )
+                logger.info("loading job {}".format(load_job.job_id))
+                job = load_job.result(timeout=600)
+                logger.info(job._properties)
 
-        except google_exceptions.BadRequest as err:
-            logger.error(
-                "failed to load table {} from file: {}".format(table_name, str(err))
-            )
-            if load_job and load_job.errors:
-                reason = err.errors[0]["reason"]
-                messages = [f"{err['message']}" for err in load_job.errors]
-                logger.error("reason: {reason}, errors:\n{e}".format(reason=reason, e="\n".join(messages)))
-                err.message = f"reason: {reason}, errors: {';'.join(messages)}"
+                return job
 
-            raise err
+            except google_exceptions.BadRequest as err:
+                logger.error(
+                    "failed to load table {} from file: {}".format(table_name, str(err))
+                )
+                if load_job and load_job.errors:
+                    reason = err.errors[0]["reason"]
+                    messages = [f"{err['message']}" for err in load_job.errors]
+                    logger.error("reason: {reason}, errors:\n{e}".format(reason=reason, e="\n".join(messages)))
+                    err.message = f"reason: {reason}, errors: {';'.join(messages)}"
+
+                raise err
+            
+            except Exception as exception:
+                if attempts > 0:
+                    logger.warning(exception)
+                    time.sleep(60)
+                    continue
+                else:
+                    raise exception
 
 
 class PartialLoadJobProcessHandler(LoadJobProcessHandler):
