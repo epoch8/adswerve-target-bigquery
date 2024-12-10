@@ -150,6 +150,7 @@ def prioritize_one_data_type_from_multiple_ones_in_any_of(field_property):
                            "boolean": 4,
                            "object": 5,
                            "array": 6,
+                           "json": 7,
                            }
 
     any_of_data_types = {}
@@ -187,7 +188,8 @@ def convert_field_type(field_name, field_property, force_fields={}):
                        "array": "RECORD",
                        "bq-geography": "GEOGRAPHY",
                        "bq-decimal": "DECIMAL",
-                       "bq-bigdecimal": "BIGDECIMAL"
+                       "bq-bigdecimal": "BIGDECIMAL",
+                       "json": "JSON",
                        }
 
     if field_name in force_fields and force_fields[field_name].get("type"):
@@ -445,7 +447,8 @@ def format_record_to_schema(record, bq_schema):
                        "BOOLEAN": bool,
                        "GEOGRAPHY": str,
                        "DECIMAL": str,
-                       "BIGDECIMAL": str
+                       "BIGDECIMAL": str,
+                       "JSON": dict,
                        }
 
     if isinstance(record, list):
