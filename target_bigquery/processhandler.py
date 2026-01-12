@@ -181,7 +181,8 @@ class LoadJobProcessHandler(BaseProcessHandler):
         schema = self.schemas[stream]
         bq_schema = self.bq_schema_dicts[stream]
         nr = cleanup_record(schema, msg.record,
-                            force_fields=self.table_configs.get(msg.stream, {}).get("force_fields", {}))
+                            force_fields=self.table_configs.get(msg.stream, {}).get("force_fields", {}),
+                            anyascii_fix=self.table_configs.get(msg.stream, {}).get("anyascii_fix", False))
 
         try:
             nr = format_record_to_schema(nr, self.bq_schema_dicts[stream])

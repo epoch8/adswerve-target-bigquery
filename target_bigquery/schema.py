@@ -2,6 +2,7 @@
 the purpose of this module is to convert JSON schema to BigQuery schema.
 """
 import re
+import anyascii
 
 from target_bigquery.simplify_json_schema import BQ_DECIMAL_SCALE_MAX, BQ_BIGDECIMAL_SCALE_MAX, \
     BQ_DECIMAL_MAX_PRECISION_INCREMENT, BQ_BIGDECIMAL_MAX_PRECISION_INCREMENT
@@ -14,7 +15,7 @@ METADATA_FIELDS = {
 }
 
 
-def cleanup_record(schema, record, force_fields={}):
+def cleanup_record(schema, record, force_fields={}, anyascii_fix=False):
     """
     Clean up / prettify field names, make sure they match BigQuery naming conventions.
 
@@ -29,19 +30,23 @@ def cleanup_record(schema, record, force_fields={}):
     :return: JSON record/data, where field names are cleaned up / prettified.
     """
     if not isinstance(record, dict) and not isinstance(record, list):
+
+        if isinstance(record, str) and anyascii_fix is True:
+            record = anyascii.anyascii(record)
+
         return record
 
     elif isinstance(record, list):
         nr = []
         for item in record:
-            nr.append(cleanup_record(schema, item, force_fields))
+            nr.append(cleanup_record(schema, item, force_fields, anyascii_fix))
         return nr
 
     elif isinstance(record, dict):
         nr = {}
         for key, value in record.items():
             nkey = create_valid_bigquery_field_name(key, force_fields)
-            nr[nkey] = cleanup_record(schema, value, force_fields)
+            nr[nkey] = cleanup_record(schema, value, force_fields, anyascii_fix)
         return nr
 
     else:
