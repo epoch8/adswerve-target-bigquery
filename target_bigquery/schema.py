@@ -15,6 +15,10 @@ METADATA_FIELDS = {
 }
 
 
+def has_cyrillic(text):
+    return bool(re.search('[а-яА-Я]', text))
+
+
 def cleanup_record(schema, record, force_fields={}, anyascii_fix=False):
     """
     Clean up / prettify field names, make sure they match BigQuery naming conventions.
@@ -31,7 +35,7 @@ def cleanup_record(schema, record, force_fields={}, anyascii_fix=False):
     """
     if not isinstance(record, dict) and not isinstance(record, list):
 
-        if isinstance(record, str) and anyascii_fix is True:
+        if anyascii_fix is True and isinstance(record, str) and not has_cyrillic(record):
             record = anyascii.anyascii(record)
 
         return record
