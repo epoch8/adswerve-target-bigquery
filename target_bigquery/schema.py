@@ -37,8 +37,10 @@ def cleanup_record(schema, record, force_fields={}, anyascii_fix=False):
     if not isinstance(record, dict) and not isinstance(record, list):
 
         if anyascii_fix is True and isinstance(record, str) and not has_cyrillic(record):
+            record_original = record
             record = anyascii.anyascii(record)
-            record = f"{record} [anyascii_fix - {datetime.datetime.now()}]"
+            if record != record_original:
+                record = f"{record} [anyascii_fix - {datetime.datetime.now()}]"
 
         return record
 
