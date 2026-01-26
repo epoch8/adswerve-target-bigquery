@@ -3,6 +3,7 @@ the purpose of this module is to convert JSON schema to BigQuery schema.
 """
 import re
 import anyascii
+import datetime
 
 from target_bigquery.simplify_json_schema import BQ_DECIMAL_SCALE_MAX, BQ_BIGDECIMAL_SCALE_MAX, \
     BQ_DECIMAL_MAX_PRECISION_INCREMENT, BQ_BIGDECIMAL_MAX_PRECISION_INCREMENT
@@ -37,6 +38,7 @@ def cleanup_record(schema, record, force_fields={}, anyascii_fix=False):
 
         if anyascii_fix is True and isinstance(record, str) and not has_cyrillic(record):
             record = anyascii.anyascii(record)
+            record = f"{record} [anyascii_fix - {datetime.datetime.now()}]"
 
         return record
 
