@@ -1,5 +1,5 @@
 singer-python~=5.12.2
-google-cloud-bigquery~=3.3.5
+google-cloud-bigquery~=3.25.0
 jsonschema~=2.6.0
 setuptools~=65.5.0
 anyascii~=0.3.3

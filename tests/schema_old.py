@@ -180,7 +180,8 @@ def define_schema(field, name, required_fields=None):
             schema_mode = "NULLABLE"
 
         return SchemaField(
-            bigquery_transformed_key(schema_name), schema_type, schema_mode, schema_description, schema_fields
+            bigquery_transformed_key(schema_name), schema_type, schema_mode,
+            description=schema_description, fields=schema_fields
         )
 
     elif field_type == "object":
@@ -188,7 +189,8 @@ def define_schema(field, name, required_fields=None):
         schema_fields = tuple(build_schema_old(field, add_metadata=False))
 
         return SchemaField(
-            bigquery_transformed_key(schema_name), schema_type, schema_mode, schema_description, schema_fields
+            bigquery_transformed_key(schema_name), schema_type, schema_mode,
+            description=schema_description, fields=schema_fields
         )
 
     elif field_type == "array":
@@ -215,7 +217,8 @@ def define_schema(field, name, required_fields=None):
         schema_mode = "REPEATED"
 
         return SchemaField(
-            bigquery_transformed_key(schema_name), schema_type, schema_mode, schema_description, schema_fields
+            bigquery_transformed_key(schema_name), schema_type, schema_mode,
+            description=schema_description, fields=schema_fields
         )
 
     if field_type not in JSON_SCHEMA_LITERALS:
@@ -237,7 +240,10 @@ def define_schema(field, name, required_fields=None):
     else:
         schema_type = field_type
 
-    return SchemaField(bigquery_transformed_key(schema_name), schema_type, schema_mode, schema_description, ())
+    return SchemaField(
+        bigquery_transformed_key(schema_name), schema_type, schema_mode,
+        description=schema_description, fields=()
+    )
 
 
 def bigquery_transformed_key(key):
@@ -264,7 +270,7 @@ def build_schema_old(schema, key_properties=None, add_metadata=True, force_field
         if key in force_fields:
             SCHEMA.append(
                 SchemaField(key, force_fields[key]["type"], force_fields[key].get("mode", "nullable"),
-                            force_fields[key].get("description", None), ())
+                            description=force_fields[key].get("description", None), fields=())
             )
 
         elif not props:
@@ -281,7 +287,7 @@ def build_schema_old(schema, key_properties=None, add_metadata=True, force_field
     if add_metadata:
         for field in METADATA_FIELDS:
             SCHEMA.append(
-                SchemaField(field, METADATA_FIELDS[field]["bq_type"], "nullable", None, ())
+                SchemaField(field, METADATA_FIELDS[field]["bq_type"], "nullable", description=None, fields=())
             )
 
     return SCHEMA
