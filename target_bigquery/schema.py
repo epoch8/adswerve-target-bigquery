@@ -34,6 +34,8 @@ def cleanup_record(schema, record, force_fields={}, anyascii_fix=False):
         Please see README for more information and examples.
     :return: JSON record/data, where field names are cleaned up / prettified.
     """
+    datetime_columns = [k for k, v in schema.get("properties").items() if v.get("format") == "date-time"]
+
     if not isinstance(record, dict) and not isinstance(record, list):
 
         if anyascii_fix is True and isinstance(record, str) and not has_cyrillic(record):
@@ -51,6 +53,11 @@ def cleanup_record(schema, record, force_fields={}, anyascii_fix=False):
         return nr
 
     elif isinstance(record, dict):
+        if datetime_columns:
+            for col in datetime_columns:
+                if record.get(col) == "0000-00-00 00:00:00":
+                    record[col] = None
+        
         nr = {}
         for key, value in record.items():
             nkey = create_valid_bigquery_field_name(key, force_fields)
