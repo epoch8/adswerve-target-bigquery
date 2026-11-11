@@ -606,13 +606,19 @@ def _helper_simplify(root_schema, child_schema):
     if isinstance(child_schema, Cachable):
         return child_schema
 
-    ## Refs override all other type definitions
+    ## Refs override all other type definitions.
+    ## Singer's `sdc_recursive_*` definitions point `items.$ref` at themselves.
+    ## BigQuery has no recursive column type, so keep the scalar and let the
+    ## parent property supply the single array layer.
     if _is_ref(child_schema):
-        try:
-            ret_schema = _helper_simplify(root_schema, get_ref(root_schema, child_schema['$ref']))
-
-        except RecursionError:
-            raise JSONSchemaError('`$ref` path "{}" is recursive'.format(get_ref(root_schema, child_schema['$ref'])))
+        ref = child_schema['$ref']
+        resolved = get_ref(root_schema, ref)
+        items = resolved.get('items') if isinstance(resolved, dict) else None
+        if isinstance(items, dict) and items.get('$ref') == ref:
+            resolved = deepcopy(resolved)
+            resolved['type'] = [t for t in get_type(resolved) if t != ARRAY] or [STRING]
+            resolved.pop('items', None)
+        ret_schema = _helper_simplify(root_schema, resolved)
 
     elif _is_allof(child_schema):
         ret_schema = _simplify__allof(root_schema, child_schema)
